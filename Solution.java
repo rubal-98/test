@@ -1,47 +1,63 @@
 import java.util.*;
 
-public class Solution {
+public class ExtremeCornersAlternate {
 
-    public static int minReplacements(int[] arr, int k) {
-        Map<Integer, Integer> freq = new HashMap<>();
-        for (int x : arr) {
-            if (freq.containsKey(x)) {
-                freq.put(x, freq.get(x) + 1);
-            } else {
-                freq.put(x, 1);
+    static class Node {
+        int val;
+        Node left, right;
+        Node(int val) { this.val = val; }
+    }
+
+    public static void optimal(Node root) {
+        if (root == null) return;
+
+        Queue<Node> queue = new LinkedList<>();
+        queue.add(root);
+        int level = 0;
+
+        while (!queue.isEmpty()) {
+            int size = queue.size();
+
+            for (int i = 0; i < size; i++) {
+                Node curr = queue.poll();
+
+                // even level → print first, odd level → print last
+                if ((level % 2 == 0 && i == 0) || (level % 2 == 1 && i == size - 1)) {
+                    System.out.print(curr.val + " ");
+                }
+
+                if (curr.left != null) queue.add(curr.left);
+                if (curr.right != null) queue.add(curr.right);
             }
+            level++;
         }
-
-        int distinct = freq.size();
-        if (distinct <= k) return 0;
-
-        PriorityQueue<Integer> minHeap = new PriorityQueue<>(freq.values());
-
-        int replacements = 0;
-        int toRemove = distinct - k;
-        while (toRemove-- > 0) {
-            replacements += minHeap.poll();
-        }
-        return replacements;
+        System.out.println();
     }
 
     public static void main(String[] args) {
-        int[] arr1 = {1, 1, 2, 2, 3, 3, 4, 5};
-        System.out.println("Test 1: " + minReplacements(arr1, 3)); // Expected: 2
+        /*
+                1
+               / \
+              2   3
+             / \ / \
+            4  5 6  7
+           / \
+          8   9
+        */
+        Node root = new Node(1);
+        root.left = new Node(2);
+        root.right = new Node(3);
+        root.left.left = new Node(4);
+        root.left.right = new Node(5);
+        root.right.left = new Node(6);
+        root.right.right = new Node(7);
+        root.left.left.left = new Node(8);
+        root.left.left.right = new Node(9);
 
-        int[] arr2 = {1, 1, 2, 2, 3, 3};
-        System.out.println("Test 2: " + minReplacements(arr2, 3)); // Expected: 0
+        System.out.print("Brute Force: ");
+        bruteForce(root);
 
-        int[] arr3 = {1, 1, 2, 2};
-        System.out.println("Test 3: " + minReplacements(arr3, 3)); // Expected: 0
-
-        int[] arr4 = {1, 1, 1, 1, 2, 2, 3};
-        System.out.println("Test 4: " + minReplacements(arr4, 1)); // Expected: 3
-
-        int[] arr5 = {5, 5, 5, 5};
-        System.out.println("Test 5: " + minReplacements(arr5, 2)); // Expected: 0
-
-        int[] arr6 = {1, 2, 3, 4};
-        System.out.println("Test 6: " + minReplacements(arr6, 2)); // Expected: 2
+        System.out.print("Optimal:     ");
+        optimal(root);
     }
 }
