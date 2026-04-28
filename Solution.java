@@ -1,63 +1,90 @@
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
 
-public class ExtremeCornersAlternate {
+public class Solution {
 
-    static class Node {
-        int val;
-        Node left, right;
-        Node(int val) { this.val = val; }
+    private static class Node {
+        String customerId;
+        Node prev, next;
+
+        Node(String customerId) {
+            this.customerId = customerId;
+        }
     }
 
-    public static void optimal(Node root) {
-        if (root == null) return;
+    private static class DoublyLinkedList {
+        Node head, tail;
+        int size;
 
-        Queue<Node> queue = new LinkedList<>();
-        queue.add(root);
-        int level = 0;
-
-        while (!queue.isEmpty()) {
-            int size = queue.size();
-
-            for (int i = 0; i < size; i++) {
-                Node curr = queue.poll();
-
-                // even level → print first, odd level → print last
-                if ((level % 2 == 0 && i == 0) || (level % 2 == 1 && i == size - 1)) {
-                    System.out.print(curr.val + " ");
-                }
-
-                if (curr.left != null) queue.add(curr.left);
-                if (curr.right != null) queue.add(curr.right);
-            }
-            level++;
+        DoublyLinkedList() {
+            head = new Node(null);
+            tail = new Node(null);
+            head.next = tail;
+            tail.prev = head;
         }
-        System.out.println();
+
+        Node addLast(String customerId) {
+            Node node = new Node(customerId);
+            node.prev      = tail.prev;
+            node.next      = tail;
+            tail.prev.next = node;
+            tail.prev      = node;
+            size++;
+            return node;
+        }
+
+        void remove(Node node) {
+            node.prev.next = node.next;
+            node.next.prev = node.prev;
+            node.prev      = null;
+            node.next      = null;
+            size--;
+        }
+
+        Node peekFirst() {
+            return head.next == tail ? null : head.next;
+        }
+    }
+
+    private final HashMap<String, Node> visitedOnceMap = new HashMap<>();
+    private final HashSet<String>       visitedBefore  = new HashSet<>();
+    private final DoublyLinkedList      orderList      = new DoublyLinkedList();
+
+    public void postCustomerVisit(String customerId) {
+        if (visitedBefore.contains(customerId)) {
+            return;
+        }
+        if (visitedOnceMap.containsKey(customerId)) {
+            Node node = visitedOnceMap.remove(customerId);
+            orderList.remove(node);
+            visitedBefore.add(customerId);
+        } else {
+            Node node = orderList.addLast(customerId);
+            visitedOnceMap.put(customerId, node);
+        }
+    }
+
+    public String getFirstOneTimeVisitor() {
+        Node first = orderList.peekFirst();
+        return first == null ? null : first.customerId;
     }
 
     public static void main(String[] args) {
-        /*
-                1
-               / \
-              2   3
-             / \ / \
-            4  5 6  7
-           / \
-          8   9
-        */
-        Node root = new Node(1);
-        root.left = new Node(2);
-        root.right = new Node(3);
-        root.left.left = new Node(4);
-        root.left.right = new Node(5);
-        root.right.left = new Node(6);
-        root.right.right = new Node(7);
-        root.left.left.left = new Node(8);
-        root.left.left.right = new Node(9);
+        Solution service = new Solution();
 
-        System.out.print("Brute Force: ");
-        bruteForce(root);
+        service.postCustomerVisit("c1");
+        service.postCustomerVisit("c2");
+        service.postCustomerVisit("c3");
 
-        System.out.print("Optimal:     ");
-        optimal(root);
+        System.out.println(service.getFirstOneTimeVisitor());  // c1
+
+        service.postCustomerVisit("c1");
+        System.out.println(service.getFirstOneTimeVisitor());  // c2
+
+        service.postCustomerVisit("c2");
+        System.out.println(service.getFirstOneTimeVisitor());  // c3
+
+        service.postCustomerVisit("c3");
+        System.out.println(service.getFirstOneTimeVisitor());  // null
     }
 }
